@@ -13,6 +13,6 @@ const postSchema = new mongoose.Schema({
   tags: { type: [String], default: [] },
   status: { type: String, enum: ['draft', 'published'], default: 'draft' },
   comments: { type: [commentSchema], default: [] },
-}, { timestamps: true });
+}, { timestamps: true, toJSON: { virtuals: true } });
 
 module.exports = mongoose.model('Post', postSchema);
