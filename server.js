@@ -26,13 +26,13 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-app.use('/api/posts', postsRouter);
-app.use('/api', postsRouter);
-
-// Health check
+// Health check — must be before catch-all /api mount
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', db: mongoose.connection.readyState === 1 });
 });
+
+app.use('/api/posts', postsRouter);
+app.use('/api', postsRouter);
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
