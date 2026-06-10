@@ -724,12 +724,12 @@ const App = {
             <div class="contact-card" style="background: var(--bg-card); padding: var(--sp-8); border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: var(--sp-6);">
               <h3 style="font-family: var(--font-heading); font-size: var(--fs-xl); color: var(--text-primary); margin-bottom: var(--sp-4);">Social Media</h3>
               <div style="display: flex; gap: var(--sp-4);">
-                <a href="https://www.instagram.com/abhixshots?igsh=bDg4dGZjY2N4b3p5" target="_blank" rel="noopener" class="btn btn--secondary" style="display: flex; flex: 1; justify-content: center;">
+                <button onclick="window.open('https://www.instagram.com/abhixshots?igsh=bDg4dGZjY2N4b3p5','_blank')" class="btn btn--secondary" style="display: flex; flex: 1; justify-content: center; cursor: pointer;">
                   ${Icons.instagram} Instagram
-                </a>
-                <a href="https://www.linkedin.com/in/abhishek-kumar-285a24327?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" rel="noopener" class="btn btn--secondary" style="display: flex; flex: 1; justify-content: center;">
+                </button>
+                <button onclick="window.open('https://www.linkedin.com/in/abhishek-kumar-285a24327?utm_source=share_via&utm_content=profile&utm_medium=member_android','_blank')" class="btn btn--secondary" style="display: flex; flex: 1; justify-content: center; cursor: pointer;">
                   ${Icons.linkedin} LinkedIn
-                </a>
+                </button>
               </div>
             </div>
 
