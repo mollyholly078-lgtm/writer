@@ -472,16 +472,15 @@ button {
   color: var(--text-secondary);
 }
 
-/* Nav actions (theme button + hamburger) */
-.nav__actions {
+/* Theme toggle in nav links */
+.nav__item--theme {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
 }
 
 .nav__theme-btn {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -495,11 +494,12 @@ button {
 
 .nav__theme-btn:hover {
   background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .nav__theme-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 /* --- Hero Section (Home) --- */
@@ -2183,6 +2183,37 @@ button {
   .nav__link svg {
     width: 20px;
     height: 20px;
+  }
+
+  .nav__item--theme {
+    width: 100%;
+    padding: var(--sp-2) 0;
+    border-top: 1px solid var(--border);
+    margin-top: var(--sp-2);
+  }
+
+  .nav__item--theme .nav__theme-btn {
+    width: 100%;
+    height: auto;
+    justify-content: flex-start;
+    padding: var(--sp-3) var(--sp-4);
+    gap: var(--sp-3);
+    border-radius: var(--radius-md);
+    font-size: var(--fs-base);
+    font-family: var(--font-body);
+  }
+
+  .nav__item--theme .nav__theme-btn::after {
+    content: 'Switch Theme';
+  }
+
+  .nav__item--theme .nav__theme-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav__item--theme .nav__theme-btn:hover {
+    background: var(--bg-card);
   }
 
   .nav__cta {
