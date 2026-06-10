@@ -683,16 +683,16 @@ const App = {
         <div class="container container--narrow">
           <div class="section-header">
             <div>
-              <h1 class="section-title">About Me</h1>
+              <h1 class="section-title">About Us</h1>
             </div>
           </div>
           <div class="about-content">
             <div class="about-text" style="font-size: var(--fs-lg); line-height: 1.8; color: var(--text-secondary);">
-              <p>Hi, I'm Abhi. I'm a passionate writer, thinker, and creator.</p>
+              <p>Hi, We are Abhi and Catty</p>
               <br>
-              <p>Welcome to my personal platform where I share my thoughts, stories, and ideas. I believe that writing is one of the most powerful ways to connect with others and explore the world around us.</p>
+              <p>Welcome to our personal platform where me and my girlfriend share our thoughts, stories, and ideas. We believe that writing is one of the most powerful ways to connect with others and explore the world around us.</p>
               <br>
-              <p>When I'm not writing, you can find me exploring new technologies, reading books, or designing beautiful interfaces. This platform is built to be a distraction-free space for authentic expression.</p>
+              <p>When we're not writing, you can find us exploring new technologies and reading books. This platform is built to be a distraction-free space for authentic expression.</p>
             </div>
           </div>
         </div>
