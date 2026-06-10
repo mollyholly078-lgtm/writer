@@ -88,47 +88,172 @@ async function api(path, options = {}) {
   return res.json();
 }
 
-// ============ STORAGE ============
-const Storage = {
+// ============ LOCAL STORAGE BACKEND ============
+const LocalStorage = {
+  _key: 'writer_posts',
+
+  _all() {
+    try {
+      return JSON.parse(localStorage.getItem(this._key) || '[]');
+    } catch {
+      return [];
+    }
+  },
+
+  _save(posts) {
+    localStorage.setItem(this._key, JSON.stringify(posts));
+  },
+
+  _nextId() {
+    const posts = this._all();
+    return posts.length > 0 ? Math.max(...posts.map(p => p.id)) + 1 : 1;
+  },
+
   async getAll() {
-    return api('/posts');
+    return this._all();
   },
 
   async getById(id) {
-    return api(`/posts/${id}`);
+    const posts = this._all();
+    return posts.find(p => p.id === Number(id)) || null;
   },
 
   async create(post) {
-    return api('/posts', {
-      method: 'POST',
-      body: JSON.stringify(post),
-    });
+    const posts = this._all();
+    const now = new Date().toISOString();
+    const newPost = {
+      id: this._nextId(),
+      title: post.title || 'Untitled',
+      content: post.content || '',
+      coverImage: post.coverImage || '',
+      tags: post.tags || [],
+      status: post.status || 'draft',
+      comments: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    posts.push(newPost);
+    this._save(posts);
+    return newPost;
   },
 
   async update(id, updates) {
-    return api(`/posts/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-    });
+    const posts = this._all();
+    const index = posts.findIndex(p => p.id === Number(id));
+    if (index === -1) return null;
+    posts[index] = {
+      ...posts[index],
+      ...updates,
+      id: posts[index].id,
+      createdAt: posts[index].createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+    this._save(posts);
+    return posts[index];
   },
 
   async delete(id) {
-    await api(`/posts/${id}`, { method: 'DELETE' });
+    const posts = this._all();
+    this._save(posts.filter(p => p.id !== Number(id)));
   },
 
   async getPublished() {
-    return api('/posts?status=published');
+    const posts = this._all();
+    return posts.filter(p => p.status === 'published');
   },
 
   async search(query) {
-    return api(`/posts?search=${encodeURIComponent(query)}`);
+    const posts = this._all();
+    const q = query.toLowerCase();
+    return posts.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.content.toLowerCase().includes(q) ||
+      (p.tags || []).some(t => t.toLowerCase().includes(q))
+    );
   },
 
   async addComment(postId, comment) {
-    return api(`/posts/${postId}/comments`, {
-      method: 'POST',
-      body: JSON.stringify(comment),
+    const posts = this._all();
+    const post = posts.find(p => p.id === Number(postId));
+    if (!post) throw new Error('Post not found');
+    if (!post.comments) post.comments = [];
+    post.comments.push({
+      name: comment.name,
+      content: comment.content,
+      date: new Date().toISOString(),
     });
+    post.updatedAt = new Date().toISOString();
+    this._save(posts);
+    return comment;
+  },
+};
+
+// ============ STORAGE ============
+const Storage = {
+  async _apiOrLocal(fn) {
+    try {
+      return await fn('api');
+    } catch {
+      return fn('local');
+    }
+  },
+
+  async getAll() {
+    try { return await api('/posts'); }
+    catch { return LocalStorage.getAll(); }
+  },
+
+  async getById(id) {
+    try { return await api(`/posts/${id}`); }
+    catch { return LocalStorage.getById(id); }
+  },
+
+  async create(post) {
+    try {
+      return await api('/posts', { method: 'POST', body: JSON.stringify(post) });
+    } catch {
+      return LocalStorage.create(post);
+    }
+  },
+
+  async update(id, updates) {
+    try {
+      return await api(`/posts/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+      });
+    } catch {
+      return LocalStorage.update(id, updates);
+    }
+  },
+
+  async delete(id) {
+    try {
+      await api(`/posts/${id}`, { method: 'DELETE' });
+    } catch {
+      await LocalStorage.delete(id);
+    }
+  },
+
+  async getPublished() {
+    try { return await api('/posts?status=published'); }
+    catch { return LocalStorage.getPublished(); }
+  },
+
+  async search(query) {
+    try { return await api(`/posts?search=${encodeURIComponent(query)}`); }
+    catch { return LocalStorage.search(query); }
+  },
+
+  async addComment(postId, comment) {
+    try {
+      return await api(`/posts/${postId}/comments`, {
+        method: 'POST',
+        body: JSON.stringify(comment),
+      });
+    } catch {
+      return LocalStorage.addComment(postId, comment);
+    }
   },
 };
 
@@ -389,7 +514,20 @@ const App = {
   },
 
   async seedSamplePosts() {
-    await api('/seed', { method: 'POST' });
+    try {
+      await api('/seed', { method: 'POST' });
+    } catch {
+      // Seed sample posts into localStorage
+      const samples = [
+        { title: 'The Art of Creative Writing', content: '<p>Writing is not just about putting words on a page. It\'s about expressing ideas, capturing emotions, and connecting with readers on a deeper level. Whether you\'re a seasoned author or just starting out, the journey of creative writing is one of constant discovery.</p><p>In this post, we explore the techniques that can help you unlock your creative potential and write stories that resonate.</p>', coverImage: '', tags: ['writing', 'creativity'], status: 'published' },
+        { title: 'Building Beautiful UIs with CSS', content: '<p>Cascading Style Sheets have come a long way. With modern CSS features like Grid, Flexbox, Custom Properties, and Container Queries, creating beautiful, responsive interfaces has never been easier.</p><p>This guide covers the essential techniques every developer should know to craft stunning user interfaces.</p>', coverImage: '', tags: ['css', 'design', 'web'], status: 'published' },
+        { title: 'Why I Write: A Personal Reflection', content: '<p>Words have power. They can inspire, heal, challenge, and transform. For me, writing is not just a hobby — it\'s a way of understanding the world and my place in it.</p><p>In this personal reflection, I share my journey as a writer and why putting pen to paper (or fingers to keyboard) matters to me.</p>', coverImage: '', tags: ['personal', 'reflection'], status: 'published' },
+        { title: 'Draft: Ideas for Future Posts', content: '<p>This is a draft post where I collect ideas and inspiration for future writing. Topics I\'m considering include technology, philosophy, and storytelling techniques.</p>', coverImage: '', tags: ['ideas', 'draft'], status: 'draft' },
+      ];
+      for (const sample of samples) {
+        await LocalStorage.create(sample);
+      }
+    }
   },
 
   // ============ VIEWS ============
