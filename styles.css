@@ -2155,7 +2155,7 @@ button {
     flex-direction: column;
     padding: var(--sp-6) var(--sp-4);
     gap: var(--sp-1);
-    z-index: 99;
+    z-index: 999;
     overflow-y: auto;
   }
 
@@ -2199,7 +2199,7 @@ button {
   .nav__toggle {
     display: flex;
     position: relative;
-    z-index: 101;
+    z-index: 1000;
   }
 
   .nav__brand .nav__title {
