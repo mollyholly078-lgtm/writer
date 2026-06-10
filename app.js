@@ -74,9 +74,9 @@ function escapeHtml(text) {
 }
 
 // ============ API ============
-// Uses relative /api so it works with a local backend or Render.
-// When the API is unreachable (e.g. GitHub Pages), all data falls back to localStorage.
-// To use a remote backend, change this to the deployed API URL.
+// Uses relative /api when running locally or on Vercel (same origin).
+// On GitHub Pages (no backend), all data falls back to localStorage.
+// To switch to a remote backend, change API_BASE to the deployed API URL.
 const API_BASE = '/api';
 
 async function api(path, options = {}) {

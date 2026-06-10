@@ -38,11 +38,15 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-connectDB().then((connected) => {
-  const mode = connected ? 'with MongoDB' : 'without database';
-  console.log(`Server running at http://localhost:${PORT} (${mode})`);
-  app.listen(PORT);
-}).catch(() => {
-  console.log(`Server running at http://localhost:${PORT} (static mode)`);
-  app.listen(PORT);
-});
+if (process.env.VERCEL !== '1') {
+  connectDB().then((connected) => {
+    const mode = connected ? 'with MongoDB' : 'without database';
+    console.log(`Server running at http://localhost:${PORT} (${mode})`);
+    app.listen(PORT);
+  }).catch(() => {
+    console.log(`Server running at http://localhost:${PORT} (static mode)`);
+    app.listen(PORT);
+  });
+}
+
+module.exports = app;

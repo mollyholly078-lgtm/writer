@@ -2,13 +2,25 @@ const mongoose = require('mongoose');
 
 const MONGO_URI = process.env.MONGO_URI;
 
+let cachedClient = null;
+
 async function connectDB() {
+  if (cachedClient && mongoose.connection.readyState === 1) {
+    return true;
+  }
+
   if (!MONGO_URI) {
     console.warn('MONGO_URI not set — running without database');
     return false;
   }
+
   try {
-    await mongoose.connect(MONGO_URI);
+    mongoose.connection.on('connected', () => {
+      cachedClient = mongoose.connection;
+    });
+    await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
     console.log('MongoDB connected');
     return true;
   } catch (err) {
