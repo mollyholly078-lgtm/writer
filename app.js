@@ -180,14 +180,39 @@ const LocalStorage = {
     const post = posts.find(p => p.id === Number(postId));
     if (!post) throw new Error('Post not found');
     if (!post.comments) post.comments = [];
-    post.comments.push({
+    const newComment = {
+      _id: String(Date.now()) + String(Math.random()).slice(2),
       name: comment.name,
       content: comment.content,
       date: new Date().toISOString(),
-    });
+      parentId: comment.parentId || null,
+    };
+    post.comments.push(newComment);
+    post.updatedAt = new Date().toISOString();
+    this._save(posts);
+    return newComment;
+  },
+
+  async editComment(postId, commentId, updates) {
+    const posts = this._all();
+    const post = posts.find(p => p.id === Number(postId));
+    if (!post) throw new Error('Post not found');
+    const comment = post.comments.find(c => c._id === commentId);
+    if (!comment) throw new Error('Comment not found');
+    if (updates.name !== undefined) comment.name = updates.name;
+    if (updates.content !== undefined) comment.content = updates.content;
     post.updatedAt = new Date().toISOString();
     this._save(posts);
     return comment;
+  },
+
+  async deleteComment(postId, commentId) {
+    const posts = this._all();
+    const post = posts.find(p => p.id === Number(postId));
+    if (!post) throw new Error('Post not found');
+    post.comments = (post.comments || []).filter(c => c._id !== commentId);
+    post.updatedAt = new Date().toISOString();
+    this._save(posts);
   },
 };
 
@@ -256,6 +281,25 @@ const Storage = {
       });
     } catch {
       return LocalStorage.addComment(postId, comment);
+    }
+  },
+
+  async editComment(postId, commentId, updates) {
+    try {
+      return await api(`/posts/${postId}/comments/${commentId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+      });
+    } catch {
+      return LocalStorage.editComment(postId, commentId, updates);
+    }
+  },
+
+  async deleteComment(postId, commentId) {
+    try {
+      await api(`/posts/${postId}/comments/${commentId}`, { method: 'DELETE' });
+    } catch {
+      await LocalStorage.deleteComment(postId, commentId);
     }
   },
 };
@@ -1224,47 +1268,179 @@ const App = {
             </form>
 
             <div class="comments-list">
-              ${(post.comments || []).map(comment => `
-                <div class="comment-item">
-                  <div class="comment-header">
-                    <strong>${escapeHtml(comment.name)}</strong>
-                    <span class="comment-date">${formatDate(comment.date)}</span>
-                  </div>
-                  <p class="comment-body">${escapeHtml(comment.content)}</p>
-                </div>
-              `).join('')}
+              ${this._renderCommentThreads(post.comments || [])}
             </div>
           </div>
         </div>
       </article>
     `;
 
-    // Handle Comment Submission
+    this._attachCommentHandlers(post.id);
+
+    if (!document.getElementById('comment-name')?.value) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  },
+
+  _renderCommentThreads(comments) {
+    const repliesMap = {};
+    const topLevel = [];
+    comments.forEach(c => {
+      const pid = c.parentId ? String(c.parentId) : null;
+      if (pid) {
+        if (!repliesMap[pid]) repliesMap[pid] = [];
+        repliesMap[pid].push(c);
+      } else {
+        topLevel.push(c);
+      }
+    });
+
+    const renderOne = (comment, depth = 0) => {
+      const id = comment._id || comment.id;
+      const replies = repliesMap[String(id)] || [];
+      return `
+        <div class="comment-item ${depth > 0 ? 'comment-item--reply' : ''}" data-comment-id="${id}">
+          <div class="comment-header">
+            <strong>${escapeHtml(comment.name)}</strong>
+            <span class="comment-date">${formatDate(comment.date)}</span>
+          </div>
+          <p class="comment-body">${escapeHtml(comment.content)}</p>
+          <div class="comment-actions">
+            <button class="comment-btn comment-btn--reply" data-action="reply">Reply</button>
+            <button class="comment-btn comment-btn--edit" data-action="edit">Edit</button>
+            <button class="comment-btn comment-btn--delete" data-action="delete">Delete</button>
+          </div>
+          <div class="comment-reply-form" style="display:none">
+            <input type="text" class="field-input reply-name" placeholder="Your Name" required>
+            <textarea class="field-input reply-content" rows="2" placeholder="Write a reply..." required></textarea>
+            <button class="btn btn--primary btn--sm reply-submit">Reply</button>
+            <button class="btn btn--secondary btn--sm reply-cancel">Cancel</button>
+          </div>
+          <div class="comment-edit-form" style="display:none">
+            <input type="text" class="field-input edit-name" value="${escapeHtml(comment.name)}">
+            <textarea class="field-input edit-content" rows="2">${escapeHtml(comment.content)}</textarea>
+            <button class="btn btn--primary btn--sm edit-save">Save</button>
+            <button class="btn btn--secondary btn--sm edit-cancel">Cancel</button>
+          </div>
+          ${replies.length > 0 ? `<div class="comment-replies">${replies.map(r => renderOne(r, depth + 1)).join('')}</div>` : ''}
+        </div>
+      `;
+    };
+
+    return topLevel.map(c => renderOne(c)).join('');
+  },
+
+  _attachCommentHandlers(postId) {
+    const list = document.querySelector('.comments-list');
+    if (!list) return;
+
+    const reRender = () => this.renderPost(postId);
+
+    // Main comment form
     document.getElementById('comment-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('comment-name').value.trim();
       const content = document.getElementById('comment-content').value.trim();
-
       if (name && content) {
         try {
-          await Storage.addComment(post.id, { name, content });
+          await Storage.addComment(postId, { name, content });
           Toast.success('Comment added');
-          this.renderPost(post.id);
+          reRender();
         } catch (err) {
           Toast.error(err.message);
         }
       }
     });
 
-    // Scroll to top on post load (only if no comments just added, but simpler to just do it)
-    // Actually, maybe don't scroll to top if we just submitted a comment.
-    // Let's only scroll to top if the hash changed, but we are just re-rendering.
-    // To handle this nicely, we'll avoid scrolling to top if it's a comment submit.
-    // For now, window.scrollTo({ top: 0, behavior: 'smooth' }) will run every time.
-    // Let's wrap it in a check or just leave it since the user sees their toast.
-    if (!document.getElementById('comment-name')?.value) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    // Delegated clicks for reply, edit, delete, and cancel buttons
+    list.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.comment-btn, .reply-cancel, .reply-submit, .edit-save, .edit-cancel');
+      if (!btn) return;
+      const item = btn.closest('.comment-item');
+      if (!item) return;
+      const commentId = item.dataset.commentId;
+
+      // Reply button
+      if (btn.dataset.action === 'reply') {
+        item.querySelector('.comment-reply-form').style.display = '';
+        item.querySelector('.reply-name').focus();
+        return;
+      }
+
+      // Reply cancel
+      if (btn.classList.contains('reply-cancel')) {
+        item.querySelector('.comment-reply-form').style.display = 'none';
+        return;
+      }
+
+      // Reply submit
+      if (btn.classList.contains('reply-submit')) {
+        const name = item.querySelector('.reply-name').value.trim();
+        const content = item.querySelector('.reply-content').value.trim();
+        if (name && content) {
+          try {
+            await Storage.addComment(postId, { name, content, parentId: commentId });
+            Toast.success('Reply added');
+            reRender();
+          } catch (err) {
+            Toast.error(err.message);
+          }
+        }
+        return;
+      }
+
+      // Edit button
+      if (btn.dataset.action === 'edit') {
+        item.querySelector('.comment-body').style.display = 'none';
+        item.querySelector('.comment-actions').style.display = 'none';
+        item.querySelector('.comment-edit-form').style.display = '';
+        return;
+      }
+
+      // Edit cancel
+      if (btn.classList.contains('edit-cancel')) {
+        item.querySelector('.comment-edit-form').style.display = 'none';
+        item.querySelector('.comment-body').style.display = '';
+        item.querySelector('.comment-actions').style.display = '';
+        return;
+      }
+
+      // Edit save
+      if (btn.classList.contains('edit-save')) {
+        const name = item.querySelector('.edit-name').value.trim();
+        const content = item.querySelector('.edit-content').value.trim();
+        if (name && content) {
+          try {
+            await Storage.editComment(postId, commentId, { name, content });
+            Toast.success('Comment updated');
+            reRender();
+          } catch (err) {
+            Toast.error(err.message);
+          }
+        }
+        return;
+      }
+
+      // Delete button
+      if (btn.dataset.action === 'delete') {
+        Modal.show({
+          title: 'Delete Comment',
+          text: 'Are you sure you want to delete this comment?',
+          confirmText: 'Delete',
+          danger: true,
+          onConfirm: async () => {
+            try {
+              await Storage.deleteComment(postId, commentId);
+              Toast.success('Comment deleted');
+              reRender();
+            } catch (err) {
+              Toast.error(err.message);
+            }
+          },
+        });
+        return;
+      }
+    });
   },
 };
 

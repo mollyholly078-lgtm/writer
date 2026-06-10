@@ -79,9 +79,41 @@ router.post('/:id/comments', async (req, res) => {
       name: req.body.name,
       content: req.body.content,
       date: new Date(),
+      parentId: req.body.parentId || null,
     });
     await post.save();
     res.status(201).json(post);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/posts/:id/comments/:commentId
+router.put('/:id/comments/:commentId', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ error: 'Comment not found' });
+    if (req.body.name !== undefined) comment.name = req.body.name;
+    if (req.body.content !== undefined) comment.content = req.body.content;
+    await post.save();
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/posts/:id/comments/:commentId
+router.delete('/:id/comments/:commentId', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: 'Post not found' });
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ error: 'Comment not found' });
+    comment.deleteOne();
+    await post.save();
+    res.json(post);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
