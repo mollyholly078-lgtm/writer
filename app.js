@@ -226,7 +226,23 @@ const Router = {
       if (App.quill) {
         App.quill = null;
       }
-      await handler(...params);
+      try {
+        await handler(...params);
+      } catch {
+        // Show fallback if a view fails (e.g. no backend)
+        document.getElementById('view-container').innerHTML = `
+          <section class="hero">
+            <div class="container">
+              <span class="hero__eyebrow">${Icons.feather} Offline</span>
+              <h1 class="hero__title">Welcome to <em>Writer</em></h1>
+              <p class="hero__subtitle">The backend server isn't running. Start the app with <code>npm start</code> for the full experience.</p>
+              <div class="hero__actions">
+                <span class="btn btn--primary btn--lg">${Icons.edit} Start Writing</span>
+              </div>
+            </div>
+          </section>
+        `;
+      }
       this.updateNav();
     }
   },
@@ -361,11 +377,11 @@ const App = {
     // Seed sample posts if first visit
     try {
       const posts = await Storage.getAll();
-      if (posts.length === 0) {
+      if (posts.length === 0 && Array.isArray(posts)) {
         await this.seedSamplePosts();
       }
     } catch {
-      // silently fail — backend may not be seeded yet
+      // silently fail — backend may not be running
     }
 
     // Start router
@@ -379,7 +395,12 @@ const App = {
   // ============ VIEWS ============
 
   async renderHome() {
-    const posts = await Storage.getPublished();
+    let posts = [];
+    try {
+      posts = await Storage.getPublished();
+    } catch {
+      // Backend unavailable — render without posts
+    }
     const container = document.getElementById('view-container');
 
     container.innerHTML = `
@@ -604,7 +625,12 @@ const App = {
   // ============ DASHBOARD ============
 
   async renderDashboard() {
-    const allPosts = await Storage.getAll();
+    let allPosts = [];
+    try {
+      allPosts = await Storage.getAll();
+    } catch {
+      // Backend unavailable
+    }
     const published = allPosts.filter(p => p.status === 'published');
     const drafts = allPosts.filter(p => p.status === 'draft');
 
@@ -675,12 +701,16 @@ const App = {
     const query = document.getElementById('dashboard-search').value.toLowerCase();
     const activeFilter = document.querySelector('.filter-tab--active')?.dataset.filter || 'all';
 
-    let posts;
+    let posts = [];
 
-    if (query) {
-      posts = await Storage.search(query);
-    } else {
-      posts = await Storage.getAll();
+    try {
+      if (query) {
+        posts = await Storage.search(query);
+      } else {
+        posts = await Storage.getAll();
+      }
+    } catch {
+      // Backend unavailable
     }
 
     if (activeFilter === 'published') {
