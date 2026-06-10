@@ -77,7 +77,7 @@ function escapeHtml(text) {
 // Uses relative /api when running locally or on Vercel (same origin).
 // On GitHub Pages (no backend), all data falls back to localStorage.
 // To switch to a remote backend, change API_BASE to the deployed API URL.
-const API_BASE = '/api';
+const API_BASE = 'https://writer-ivory-ten.vercel.app/api';
 
 async function api(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
