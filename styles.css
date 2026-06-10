@@ -472,6 +472,36 @@ button {
   color: var(--text-secondary);
 }
 
+/* Nav actions (theme button + hamburger) */
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.nav__theme-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  transition: background var(--duration-fast);
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.nav__theme-btn:hover {
+  background: var(--bg-card);
+}
+
+.nav__theme-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* --- Hero Section (Home) --- */
 .hero {
   padding: var(--sp-24) 0 var(--sp-16);

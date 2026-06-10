@@ -473,7 +473,6 @@ const App = {
     const themeToggle = document.getElementById('theme-toggle');
     const themeIconSun = document.getElementById('theme-icon-sun');
     const themeIconMoon = document.getElementById('theme-icon-moon');
-    const themeText = document.getElementById('theme-text');
 
     const setTheme = (isLight) => {
       if (isLight) {
@@ -481,13 +480,11 @@ const App = {
         localStorage.setItem('theme', 'light');
         themeIconSun.style.display = 'block';
         themeIconMoon.style.display = 'none';
-        themeText.textContent = 'Dark Mode';
       } else {
         document.documentElement.removeAttribute('data-theme');
         localStorage.setItem('theme', 'dark');
         themeIconSun.style.display = 'none';
         themeIconMoon.style.display = 'block';
-        themeText.textContent = 'Light Mode';
       }
     };
 
@@ -727,10 +724,10 @@ const App = {
             <div class="contact-card" style="background: var(--bg-card); padding: var(--sp-8); border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: var(--sp-6);">
               <h3 style="font-family: var(--font-heading); font-size: var(--fs-xl); color: var(--text-primary); margin-bottom: var(--sp-4);">Social Media</h3>
               <div style="display: flex; gap: var(--sp-4);">
-                <a href="#" class="btn btn--secondary" style="display: flex; flex: 1; justify-content: center;">
+                <a href="https://www.instagram.com/abhixshots?igsh=bDg4dGZjY2N4b3p5" target="_blank" rel="noopener" class="btn btn--secondary" style="display: flex; flex: 1; justify-content: center;">
                   ${Icons.instagram} Instagram
                 </a>
-                <a href="#" class="btn btn--secondary" style="display: flex; flex: 1; justify-content: center;">
+                <a href="https://www.linkedin.com/in/abhishek-kumar-285a24327?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" rel="noopener" class="btn btn--secondary" style="display: flex; flex: 1; justify-content: center;">
                   ${Icons.linkedin} LinkedIn
                 </a>
               </div>
