@@ -2162,7 +2162,10 @@ button {
   }
 
   .nav__links {
-    display: none;
+    display: flex;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
     position: fixed;
     top: var(--nav-height);
     left: 0;
@@ -2173,14 +2176,16 @@ button {
     align-items: stretch;
     padding: var(--sp-6) var(--sp-4);
     gap: var(--sp-1);
-    z-index: 999;
+    z-index: 1002;
     overflow-y: auto;
     height: auto;
+    transition: opacity var(--duration-fast) var(--ease-out), visibility var(--duration-fast) var(--ease-out);
   }
 
   .nav__links--open {
-    display: flex;
-    animation: fadeIn var(--duration-fast) var(--ease-out) both;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .nav__link {
