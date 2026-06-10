@@ -497,6 +497,9 @@ const App = {
     themeToggle?.addEventListener('click', () => {
       const isLight = document.documentElement.getAttribute('data-theme') === 'light';
       setTheme(!isLight);
+      // Close mobile menu after theme toggle
+      document.getElementById('nav-links')?.classList.remove('nav__links--open');
+      document.body.style.overflow = '';
     });
 
     // Seed sample posts if first visit

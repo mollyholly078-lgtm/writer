@@ -2198,6 +2198,8 @@ button {
 
   .nav__toggle {
     display: flex;
+    position: relative;
+    z-index: 101;
   }
 
   .nav__brand .nav__title {
