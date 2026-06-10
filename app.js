@@ -74,10 +74,10 @@ function escapeHtml(text) {
 }
 
 // ============ API ============
-const RENDER_URL = 'https://writer.onrender.com';
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? '/api'
-  : `${RENDER_URL}/api`;
+// Uses relative /api so it works with a local backend or Render.
+// When the API is unreachable (e.g. GitHub Pages), all data falls back to localStorage.
+// To use a remote backend, change this to the deployed API URL.
+const API_BASE = '/api';
 
 async function api(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {

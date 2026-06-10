@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: writer
+    name: writer-blog
     env: node
     buildCommand: npm install
     startCommand: npm start

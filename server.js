@@ -9,7 +9,20 @@ const postsRouter = require('./routes/posts');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(cors({
+  origin: function (origin, callback) {
+    const allowed = [
+      'https://mollyholly078-lgtm.github.io',
+      'http://localhost:3001',
+      'http://localhost:3000',
+    ];
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
