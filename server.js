@@ -26,7 +26,12 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Health check — must be before catch-all /api mount
+// Connect to MongoDB on each request (needed for serverless)
+app.use('/api', (req, res, next) => {
+  connectDB().then(() => next()).catch(() => next());
+});
+
+// Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', db: mongoose.connection.readyState === 1 });
 });
