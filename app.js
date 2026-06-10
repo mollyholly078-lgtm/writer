@@ -74,7 +74,10 @@ function escapeHtml(text) {
 }
 
 // ============ API ============
-const API_BASE = '/api';
+const RENDER_URL = 'https://writer.onrender.com';
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? '/api'
+  : `${RENDER_URL}/api`;
 
 async function api(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
